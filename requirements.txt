@@ -1,0 +1,6 @@
+
+#This Is Create For install Required Libraries Efficiently
+
+Flask
+
+Flask-SQLAlchemy
