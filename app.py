@@ -13,6 +13,8 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
     complete = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    completed_at = db.Column(db.DateTime, nullable=True)
 
 
 @app.route("/")
@@ -21,13 +23,29 @@ def home():
     return render_template("base.html", todo_list=todo_list)
 
 
+import datetime
+
 @app.route("/add", methods=["POST"])
 def add():
     title = request.form.get("title")
-    new_todo = Todo(title=title, complete=False)
+    new_todo = Todo(title=title, complete=False, created_at=datetime.datetime.now())
     db.session.add(new_todo)
     db.session.commit()
     return redirect(url_for("home"))
+
+
+@app.route("/update/<int:todo_id>")
+def update(todo_id):
+    todo = Todo.query.filter_by(id=todo_id).first()
+    todo.complete = not todo.complete
+    if todo.complete:
+        todo.completed_at = datetime.datetime.now()
+    db.session.commit()
+    return redirect(url_for("home"))
+
+if __name__ == "__main__":
+    db.create_all()
+    app.run(debug=True)
 
 
 @app.route("/update/<int:todo_id>")
