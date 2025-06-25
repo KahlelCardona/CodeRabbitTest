@@ -1,44 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do App</title>
+  <style>
+    body {
+      background: url("/static/images/bg.jpg") no-repeat center center fixed;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      background-size: contain;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 95px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .due-date {
+      font-size: 14px;
+      color: #555;
+      margin: 4px 0;
+    }
+    button, .button-link {
+      display: inline-block;
+      padding: 8px 16px;
+      margin: 4px 4px 0 0;
+      font-size: 14px;
+      color: white;
+      background-color: #007bff;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .green { background-color: #28a745; }
+    .orange { background-color: #fd7e14; }
+    .red { background-color: #dc3545; }
+    .gray { background-color: #6c757d; }
+    .segment {
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .label {
+      display: inline-block;
+      padding: 4px 8px;
+      margin-top: 6px;
+      border-radius: 3px;
+      font-size: 13px;
+      color: white;
+    }
+    hr {
+      margin: 30px 0;
+      border: none;
+      border-top: 1px solid #ccc;
+    }
+  </style>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+  <script>
+    function confirmDelete(todoTitle) {
+      return confirm(`Are you sure you want to delete "${todoTitle}"?`);
+    }
+  </script>
 </head>
 
 <body>
-    <div style="margin-top: 50px;" class="ui container">
-        <h1 class="ui center aligned header">To Do App</h1>
+  <div class="container">
+    <h1>To Do App</h1>
 
-        <form class="ui form" action="/add" method="post">
-            <div class="field">
-                <label>Todo Title</label>
-                <input type="text" name="title" placeholder="Enter Todo..."><br>
-            </div>
-            <button class="ui blue button" type="submit">Add</button>
-        </form>
-
-        <hr>
-
-        {% for todo in todo_list %}
-        <div class="ui segment">
-            <p class="ui big header">{{todo.id }} | {{ todo.title }}</p>
-
-            {% if todo.complete == False %}
-            <span class="ui gray label">Not Complete</span>
-            {% else %}
-            <span class="ui green label">Completed</span>
-            {% endif %}
-
-            <a class="ui blue button" href="/update/{{ todo.id }}">Update</a>
-            <a class="ui red button" href="/delete/{{ todo.id }}">Delete</a>
-        </div>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="label {{ category }}">{{ message }}</div>
         {% endfor %}
-    </div>
-</body>
+      {% endif %}
+    {% endwith %}
 
+    <form action="/add" method="POST">
+  <div class="form-group">
+    <label for="title">Todo Title</label>
+    <input type="text" name="title" class="form-control" placeholder="Enter Todo..." required>
+  </div>
+  <div class="form-group mt-2">
+    <label for="due_date">Due Date</label>
+    <input type="date" name="due_date" class="form-control">
+  </div>
+  <button type="submit" class="btn btn-primary mt-2">Add</button>
+</form>
+
+
+    <hr />
+
+    {% for todo in todo_list %}
+      <div class="segment">
+        <p><strong>{{ todo.id }}. {{ todo.title }}</strong></p>
+
+        {% if todo.due_date %}
+          <p class="due-date">Due: <strong>{{ todo.due_date.strftime("%Y-%m-%d") }}</strong></p>
+        {% endif %}
+
+        {% if not todo.complete %}
+          <span class="label gray">Not Complete</span>
+          <a class="button-link green" href="{{ url_for('toggle', todo_id=todo.id) }}">Mark Done</a>
+        {% else %}
+          <span class="label green">Completed</span>
+          <a class="button-link orange" href="{{ url_for('toggle', todo_id=todo.id) }}">Mark Undone</a>
+        {% endif %}
+
+        <a class="button-link red" href="{{ url_for('delete', todo_id=todo.id) }}" onclick="return confirmDelete('{{ todo.title }}');">Delete</a>
+      </div>
+    {% else %}
+      <p>No todos yet. Add one above!</p>
+    {% endfor %}
+  </div>
+</body>
 </html>
