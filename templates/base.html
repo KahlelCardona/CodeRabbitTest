@@ -8,6 +8,46 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <style>
+        .ui.segment.done {
+            opacity: 0.6;
+        }
+        .ui.segment.done .ui.big.header {
+            text-decoration: line-through;
+        }
+        .ui.modal {
+            display: none;
+        }
+        .ui.modal.active {
+            display: block;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        .ui.modal .close.icon {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        body.modal-open::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,28 +57,152 @@
         <form class="ui form" action="/add" method="post">
             <div class="field">
                 <label>Todo Title</label>
-                <input type="text" name="title" placeholder="Enter Todo..."><br>
+                <input type="text" name="title" placeholder="Enter Todo..." required><br>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label>Priority (1-5)</label>
+                    <select name="priority" class="ui dropdown">
+                        <option value="1">1 (Lowest)</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3 (Medium)</option>
+                        <option value="4">4</option>
+                        <option value="5">5 (Highest)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Due Date</label>
+                    <input type="date" name="due_date">
+                </div>
             </div>
             <button class="ui blue button" type="submit">Add</button>
         </form>
 
         <hr>
 
+        <div class="ui menu">
+            <div class="header item">Sort by:</div>
+            <a class="item {% if sort_by == 'id' %}active{% endif %}" 
+               href="/?sort_by=id&order={% if sort_by == 'id' and order == 'asc' %}desc{% else %}asc{% endif %}">
+                ID {% if sort_by == 'id' %} {% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+            </a>
+            <a class="item {% if sort_by == 'priority' %}active{% endif %}" 
+               href="/?sort_by=priority&order={% if sort_by == 'priority' and order == 'asc' %}desc{% else %}asc{% endif %}">
+                Priority {% if sort_by == 'priority' %} {% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+            </a>
+            <a class="item {% if sort_by == 'due_date' %}active{% endif %}" 
+               href="/?sort_by=due_date&order={% if sort_by == 'due_date' and order == 'asc' %}desc{% else %}asc{% endif %}">
+                Due Date {% if sort_by == 'due_date' %} {% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+            </a>
+        </div>
+
         {% for todo in todo_list %}
-        <div class="ui segment">
+        <div class="ui segment {% if todo.complete %}done{% endif %}">
             <p class="ui big header">{{todo.id }} | {{ todo.title }}</p>
+            
+            <div style="margin-bottom: 10px;">
+                {% if todo.complete == False %}
+                <span class="ui gray label">Not Complete</span>
+                {% else %}
+                <span class="ui green label">Completed</span>
+                {% endif %}
+                
+                {% if todo.priority >= 5 %}
+                <span class="ui red label">Priority: {{ todo.priority }}</span>
+                {% elif todo.priority >= 4 %}
+                <span class="ui orange label">Priority: {{ todo.priority }}</span>
+                {% elif todo.priority >= 3 %}
+                <span class="ui yellow label">Priority: {{ todo.priority }}</span>
+                {% elif todo.priority >= 2 %}
+                <span class="ui teal label">Priority: {{ todo.priority }}</span>
+                {% else %}
+                <span class="ui gray label">Priority: {{ todo.priority }}</span>
+                {% endif %}
+                
+                {% if todo.due_date %}
+                <span class="ui blue label">Due: {{ todo.due_date.strftime('%Y-%m-%d') }}</span>
+                {% endif %}
+            </div>
 
-            {% if todo.complete == False %}
-            <span class="ui gray label">Not Complete</span>
-            {% else %}
-            <span class="ui green label">Completed</span>
-            {% endif %}
-
-            <a class="ui blue button" href="/update/{{ todo.id }}">Update</a>
+            <a class="ui blue button" href="/update/{{ todo.id }}">Toggle</a>
+            <button class="ui green button edit-btn" 
+                    data-id="{{ todo.id }}" 
+                    data-title="{{ todo.title }}" 
+                    data-priority="{{ todo.priority }}" 
+                    data-due-date="{% if todo.due_date %}{{ todo.due_date.strftime('%Y-%m-%d') }}{% endif %}">
+                Edit
+            </button>
             <a class="ui red button" href="/delete/{{ todo.id }}">Delete</a>
         </div>
         {% endfor %}
     </div>
-</body>
 
+    <div id="editModal" class="ui modal">
+        <i class="close icon"></i>
+        <div class="header">Edit Todo</div>
+        <div class="content">
+            <form id="editForm" class="ui form" action="/edit" method="post">
+                <input type="hidden" name="id" id="editTodoId">
+                <div class="field">
+                    <label>Todo Title</label>
+                    <input type="text" name="title" id="editTitle" required>
+                </div>
+                <div class="two fields">
+                    <div class="field">
+                        <label>Priority (1-5)</label>
+                        <select name="priority" id="editPriority" class="ui dropdown">
+                            <option value="1">1 (Lowest)</option>
+                            <option value="2">2</option>
+                            <option value="3">3 (Medium)</option>
+                            <option value="4">4</option>
+                            <option value="5">5 (Highest)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Due Date</label>
+                        <input type="date" name="due_date" id="editDueDate">
+                    </div>
+                </div>
+                <div class="actions">
+                    <button type="button" class="ui button" onclick="hideEditModal()">Cancel</button>
+                    <button type="submit" class="ui blue button">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showEditModal(id, title, priority, dueDate) {
+            document.getElementById('editTodoId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editPriority').value = priority;
+            document.getElementById('editDueDate').value = dueDate;
+            document.getElementById('editModal').classList.add('active');
+            document.body.classList.add('modal-open');
+        }
+
+        function hideEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var closeIcon = document.querySelector('#editModal .close.icon');
+            if (closeIcon) {
+                closeIcon.addEventListener('click', hideEditModal);
+            }
+
+            var editButtons = document.querySelectorAll('.edit-btn');
+            editButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-id');
+                    var title = this.getAttribute('data-title');
+                    var priority = this.getAttribute('data-priority');
+                    var dueDate = this.getAttribute('data-due-date');
+                    showEditModal(id, title, priority, dueDate);
+                });
+            });
+        });
+    </script>
+</body>
 </html>
