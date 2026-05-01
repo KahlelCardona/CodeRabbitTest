@@ -1,0 +1,11 @@
+.venv/
+.venv-ci/
+__pycache__/
+.pytest_cache/
+.sonar/
+instance/
+coverage.xml
+.git
+.gitignore
+.vscode/
+README.md
