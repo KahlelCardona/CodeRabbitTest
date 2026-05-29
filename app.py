@@ -45,6 +45,11 @@ def delete(todo_id):
     db.session.commit()
     return redirect(url_for("home"))
 
+
+from api import api
+app.register_blueprint(api)
+
 if __name__ == "__main__":
-    db.create_all()
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
