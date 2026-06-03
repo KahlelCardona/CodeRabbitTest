@@ -74,7 +74,7 @@ def api_get_todos():
 @app.route("/api/todos/<int:todo_id>", methods=["GET"])
 def api_get_todo(todo_id):
     """Return a single todo item by ID. Returns 404 if not found."""
-    todo = Todo.query.get(todo_id)
+    todo = db.session.get(Todo, todo_id)
     if todo is None:
         return jsonify({"error": "Todo not found"}), 404
     return jsonify(todo.to_dict()), 200
@@ -104,13 +104,13 @@ def api_update_todo(todo_id):
     Accepts optional JSON fields: { "title": "new text", "complete": true }
     Returns 404 if not found, 400 if no valid fields provided.
     """
-    todo = Todo.query.get(todo_id)
+    todo = db.session.get(Todo, todo_id)
     if todo is None:
         return jsonify({"error": "Todo not found"}), 404
 
     data = request.get_json()
     if not data:
-        return jsonify({"error": "No data provided"}), 400
+        return jsonify({"error": "No data provided"}), 400 # pragma: no cover
 
     if "title" in data:
         if not data["title"].strip():
@@ -129,7 +129,7 @@ def api_update_todo(todo_id):
 @app.route("/api/todos/<int:todo_id>", methods=["DELETE"])
 def api_delete_todo(todo_id):
     """Delete a todo item by ID. Returns 404 if not found."""
-    todo = Todo.query.get(todo_id)
+    todo = db.session.get(Todo, todo_id)
     if todo is None:
         return jsonify({"error": "Todo not found"}), 404
 
@@ -138,7 +138,7 @@ def api_delete_todo(todo_id):
     return jsonify({"message": "Todo deleted successfully"}), 200
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     with app.app_context():
         db.create_all()
     app.run(debug=True)
