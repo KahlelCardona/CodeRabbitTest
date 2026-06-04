@@ -17,7 +17,26 @@
         <form class="ui form" action="/add" method="post">
             <div class="field">
                 <label>Todo Title</label>
-                <input type="text" name="title" placeholder="Enter Todo..."><br>
+                <input type="text" name="title" placeholder="Enter Todo..." required>
+            </div>
+            <div class="field">
+                <label>Description (optional)</label>
+                <textarea name="description" placeholder="Enter description..." rows="2"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label>Due Date (optional)</label>
+                    <input type="date" name="due_date">
+                </div>
+                <div class="field">
+                    <label>Priority (optional)</label>
+                    <select name="priority" class="ui dropdown">
+                        <option value="">-- No Priority --</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
             </div>
             <button class="ui blue button" type="submit">Add</button>
         </form>
@@ -26,13 +45,31 @@
 
         {% for todo in todo_list %}
         <div class="ui segment">
-            <p class="ui big header">{{todo.id }} | {{ todo.title }}</p>
+            <p class="ui big header">{{ todo.id }} | {{ todo.title }}</p>
 
-            {% if todo.complete == False %}
-            <span class="ui gray label">Not Complete</span>
-            {% else %}
-            <span class="ui green label">Completed</span>
+            {% if todo.description %}
+            <p>{{ todo.description }}</p>
             {% endif %}
+
+            <div style="margin-bottom: 8px;">
+                {% if todo.due_date %}
+                <span class="ui label"><i class="calendar icon"></i>Due: {{ todo.due_date }}</span>
+                {% endif %}
+
+                {% if todo.priority == "high" %}
+                <span class="ui red label">High Priority</span>
+                {% elif todo.priority == "medium" %}
+                <span class="ui yellow label">Medium Priority</span>
+                {% elif todo.priority == "low" %}
+                <span class="ui green label">Low Priority</span>
+                {% endif %}
+
+                {% if todo.complete == False %}
+                <span class="ui gray label">Not Complete</span>
+                {% else %}
+                <span class="ui green label">Completed</span>
+                {% endif %}
+            </div>
 
             <a class="ui blue button" href="/update/{{ todo.id }}">Update</a>
             <a class="ui red button" href="/delete/{{ todo.id }}">Delete</a>
