@@ -1,16 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<!-- 告诉浏览器应该如何处理这个网页。 -->
+<head> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo App</title>
-
+    <!--  引用了一个叫：Semantic UI 的前端 UI 框架。-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 </head>
 
 <body>
+    <!-- div : 一个html容器 
+    页面容器：
+    ┌─────────────────────────────┐
+    │                             │
+    │        Todo App             │
+    │                             │
+    │        表单                 │
+    │                             │
+    │        Todo列表             │
+    │                             │
+    └─────────────────────────────┘
+    -->
     <div style="margin-top: 50px;" class="ui container">
         <h1 class="ui center aligned header">To Do App</h1>
 
@@ -23,7 +36,7 @@
         </form>
 
         <hr>
-
+        <!-- jinja语法 -->
         {% for todo in todo_list %}
         <div class="ui segment">
             <p class="ui big header">{{todo.id }} | {{ todo.title }}</p>
