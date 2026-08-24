@@ -13,7 +13,7 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
     complete = db.Column(db.Boolean)
-
+    priority = db.Column(db.String(20), nullable = False, default = "Medium") # Add feature priority
 
 @app.route("/") # 它告诉 Flask：当浏览器访问 / 时，应该执行下面这个函数。
 def home():
@@ -24,7 +24,10 @@ def home():
 @app.route("/add", methods=["POST"]) # GET 通常用于获取数据，而 POST 通常用于提交数据/创建数据。
 def add():
     title = request.form.get("title")
-    new_todo = Todo(title=title, complete=False)
+    priority = request.form.get("priority")
+    if priority not in ["Low", "Medium", "High"]:
+        return "Invalid Priority", 400
+    new_todo = Todo(title=title, complete=False, priority = priority)
     db.session.add(new_todo)
     db.session.commit() # 真正把之前的数据库操作提交到 SQLite。
     return redirect(url_for("home"))
