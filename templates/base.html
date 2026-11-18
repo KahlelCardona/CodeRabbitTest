@@ -19,8 +19,23 @@
                 <label>Todo Title</label>
                 <input type="text" name="title" placeholder="Enter Todo..."><br>
             </div>
+            <div class="field">
+                <label>Due Date</label>
+                <input type="text" name="due_date" placeholder="YYYY-MM-DD">
+            </div>
             <button class="ui blue button" type="submit">Add</button>
         </form>
+
+        <form class="ui form" action="/search" method="get" style="margin-top: 20px;">
+            <div class="ui action input">
+                <input type="text" name="q" placeholder="Search todos..." value="{{ query }}">
+                <button class="ui button" type="submit">Search</button>
+            </div>
+        </form>
+
+        {% if query %}
+        <p>Results for: {{ query|safe }}</p>
+        {% endif %}
 
         <hr>
 
@@ -32,6 +47,13 @@
             <span class="ui gray label">Not Complete</span>
             {% else %}
             <span class="ui green label">Completed</span>
+            {% endif %}
+
+            {% if todo.due_date %}
+            <span class="ui label">Due {{ todo.due_date.strftime('%b %d, %Y') }}</span>
+            {% endif %}
+            {% if todo.is_overdue() %}
+            <span class="ui red label">Overdue</span>
             {% endif %}
 
             <a class="ui blue button" href="/update/{{ todo.id }}">Update</a>
